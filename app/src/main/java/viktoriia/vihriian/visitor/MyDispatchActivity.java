@@ -12,6 +12,6 @@ public class MyDispatchActivity extends ParseLoginDispatchActivity {
 //if user has been authorized
     @Override
     protected Class<?> getTargetClass() {
-        return MyMainActivity.class;
+        return MapsActivity.class;
     }
 }
