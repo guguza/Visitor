@@ -30,4 +30,5 @@ dependencies {
     compile 'com.facebook.android:facebook-android-sdk:4.+'
     compile 'com.google.android.gms:play-services-maps:7.0.0'
     compile 'com.google.android.gms:play-services:7.0.0'
+    compile 'it.neokree:MaterialTabs:0.11'
 }
