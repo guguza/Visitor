@@ -19,6 +19,9 @@ import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
+import internet.ConnectionDetector;
+import ui.parts.AlertDialogManager;
+
 /**
  * Created by Администратор on 09.05.2015.
  */
@@ -29,6 +32,7 @@ public class MapFragment extends Fragment {
     private GoogleMap googleMap;
     private MapView mapView;
     protected Context mContext;
+    ConnectionDetector connection;
 
     public static MapFragment newInstance() {
         return new MapFragment();
@@ -36,10 +40,10 @@ public class MapFragment extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle bundle) {
-
         //inflate and return the layout
         View root = inflater.inflate(R.layout.map_fragment, container, false);
-        mContext = getActivity().getApplicationContext();
+        mContext = getActivity();
+        connection = new ConnectionDetector(mContext);
         mapView = (MapView) root.findViewById(R.id.mapView);
         mapView.onCreate(bundle);
 
@@ -49,60 +53,66 @@ public class MapFragment extends Fragment {
     }
 
     private void setMapView() {
-        try {
+        if(!connection.isConnectedToInternet()) {
+            AlertDialogManager dialog = new AlertDialogManager();
+            dialog.showAlertDialog(mContext,
+                    "Oops!", "Please, connect to the Internet!", false);
+        } else {
             MapsInitializer.initialize(mContext);
-
-            switch (GooglePlayServicesUtil.isGooglePlayServicesAvailable(mContext)) {
-                //if connection to Google services is established, set up MapView
-                case ConnectionResult.SUCCESS:
-                    if(mapView != null) {
-                        googleMap = mapView.getMap();
-                        // latitude and longitude
-                        double latitude = 17.385044;
-                        double longitude = 78.486671;
-
-                        // create marker
-                        MarkerOptions marker = new MarkerOptions().position(
-                                new LatLng(latitude, longitude)).title("Hello Maps");
-
-                        // Changing marker icon
-                        marker.icon(BitmapDescriptorFactory
-                                .defaultMarker(BitmapDescriptorFactory.HUE_ROSE));
-
-                        // adding marker
-                        googleMap.addMarker(marker);
-                        CameraPosition cameraPosition = new CameraPosition.Builder()
-                                .target(new LatLng(17.385044, 78.486671)).zoom(12).build();
-                        googleMap.animateCamera(CameraUpdateFactory
-                                .newCameraPosition(cameraPosition));
-                        setMapSettings();
-                    }
-                    break;
-                case ConnectionResult.SERVICE_MISSING:
-                    Toast.makeText(mContext,
-                            "Download Google Play services!", Toast.LENGTH_LONG).show();
-                    break;
-                case ConnectionResult.SERVICE_VERSION_UPDATE_REQUIRED:
-                    Toast.makeText(mContext,
-                            "Update Google Play services!", Toast.LENGTH_LONG).show();
-                    break;
-                case ConnectionResult.NETWORK_ERROR:
-                    Toast.makeText(mContext,
-                        "Check connection to the Internet!", Toast.LENGTH_LONG).show();
-                    break;
-                default:
-                    break;
-            }
-        }catch (Exception e) {
+            try {
+                checkGooglePlayAndSetMap();
+            } catch (Exception e) {
                 e.printStackTrace();
+            }
         }
     }
+
 
     private void setMapSettings() {
         googleMap.setMyLocationEnabled(true);
         googleMap.getUiSettings().setZoomControlsEnabled(true);
         googleMap.getUiSettings().setMyLocationButtonEnabled(true);
         googleMap.getUiSettings().setMapToolbarEnabled(false);
+    }
+
+    private void checkGooglePlayAndSetMap() {
+        switch (GooglePlayServicesUtil.isGooglePlayServicesAvailable(mContext)) {
+            //if connection to Google services is established, set up MapView
+            case ConnectionResult.SUCCESS:
+                if (mapView != null) {
+                    googleMap = mapView.getMap();
+                    // latitude and longitude
+                    double latitude = 46.446662;
+                    double longitude = 30.749473;
+
+                    // create marker
+                    MarkerOptions marker = new MarkerOptions().position(
+                            new LatLng(latitude, longitude)).title("Odessa is beautiful!");
+
+                    // Change marker icon
+                    marker.icon(BitmapDescriptorFactory
+                            .defaultMarker(BitmapDescriptorFactory.HUE_CYAN));
+
+                    // add marker
+                    googleMap.addMarker(marker);
+                    CameraPosition cameraPosition = new CameraPosition.Builder()
+                            .target(new LatLng(latitude, longitude)).zoom(15).build();
+                    googleMap.animateCamera(CameraUpdateFactory
+                            .newCameraPosition(cameraPosition));
+                    setMapSettings();
+                }
+                break;
+            case ConnectionResult.SERVICE_MISSING:
+                Toast.makeText(mContext,
+                        "Download Google Play services!", Toast.LENGTH_LONG).show();
+                break;
+            case ConnectionResult.SERVICE_VERSION_UPDATE_REQUIRED:
+                Toast.makeText(mContext,
+                        "Update Google Play services!", Toast.LENGTH_LONG).show();
+                break;
+            default:
+                break;
+        }
     }
     @Override
     public void onResume() {

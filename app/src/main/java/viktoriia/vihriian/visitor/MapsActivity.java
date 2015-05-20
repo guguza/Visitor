@@ -1,6 +1,6 @@
 package viktoriia.vihriian.visitor;
 
-import android.content.res.Resources;
+import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -12,10 +12,13 @@ import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.widget.Toast;
 
+import internet.ConnectionDetector;
 import it.neokree.materialtabs.MaterialTab;
 import it.neokree.materialtabs.MaterialTabHost;
 import it.neokree.materialtabs.MaterialTabListener;
+import ui.parts.AlertDialogManager;
 
 public class MapsActivity extends AppCompatActivity implements MaterialTabListener{
     Fragment mFragment;
@@ -23,14 +26,19 @@ public class MapsActivity extends AppCompatActivity implements MaterialTabListen
     ViewPager viewPager;
     ViewPagerAdapter viewPagerAdapter;
     FragmentTransaction transaction;
+    ConnectionDetector connection;
+    Context mContext;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
+        setToolbar();
 
-        viewPagerAdapter = new ViewPagerAdapter(getSupportFragmentManager());
+        mContext = getApplicationContext();
+        connection = new ConnectionDetector(mContext);
         materialTabHost = (MaterialTabHost)findViewById(R.id.material_tab_host);
+        viewPagerAdapter = new ViewPagerAdapter(getSupportFragmentManager());
         viewPager = (ViewPager) findViewById(R.id.view_pager);
 
         viewPager.setAdapter(viewPagerAdapter);
@@ -38,16 +46,17 @@ public class MapsActivity extends AppCompatActivity implements MaterialTabListen
             @Override
             public void onPageSelected(int position) {
                 // when user do a swipe the selected tab change
-                materialTabHost.setSelectedNavigationItem(position);
-                viewPagerAdapter.getItem(position);
-                transaction = getSupportFragmentManager().beginTransaction();
-                transaction.replace(R.id.fragment_container, mFragment);
+                    materialTabHost.setSelectedNavigationItem(position);
+                    viewPagerAdapter.getItem(position);
 
-                transaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
-                transaction.commit();
+                    transaction = getSupportFragmentManager().beginTransaction();
+                    transaction.replace(R.id.fragment_container, mFragment);
+
+                    transaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
+                    transaction.commit();
+
             }
         });
-
 
         // insert all tabs from pagerAdapter data
         for (int i = 0; i < viewPagerAdapter.getCount(); i++) {
@@ -58,21 +67,20 @@ public class MapsActivity extends AppCompatActivity implements MaterialTabListen
             );
         }
 
-       //create new fragment(if it doesn't exist) and transaction
         if(mFragment == null) {
-            mFragment = new MapFragment();
-        }
-        transaction = getSupportFragmentManager().beginTransaction();
-        // Replace whatever is in the fragment_container view with this fragment,
-        // and add the transaction to the back stack if needed
-        transaction.replace(R.id.fragment_container, mFragment);
-       // //transaction.addToBackStack(null);
-        // Commit the transaction
-        transaction.commit();
+            mFragment = MapFragment.newInstance();
+            transaction = getSupportFragmentManager().beginTransaction();
+            transaction.replace(R.id.fragment_container, mFragment);
 
+            transaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
+            transaction.commit();
+        }
+    }
+
+    private void setToolbar() {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         if(toolbar != null) {
-            toolbar.setTitle("Lolololol");
+            toolbar.setTitle("Visitor");
             setSupportActionBar(toolbar);
         }
     }
@@ -110,7 +118,7 @@ public class MapsActivity extends AppCompatActivity implements MaterialTabListen
                     mFragment = PlacesListFragment.newInstance();
                     break;
                 default:
-                    Log.d("Loool", "Wrong position");
+                    Log.d("Tabs - GetItem", "Wrong position");
                     break;
             }
             return mFragment;
@@ -133,31 +141,14 @@ public class MapsActivity extends AppCompatActivity implements MaterialTabListen
         Drawable icon = null;
         switch(position) {
             case 0:
-                icon = ContextCompat.getDrawable(this, R.drawable.ic_logo);
+                icon = ContextCompat.getDrawable(this, R.mipmap.ic_map_tab);
                 break;
             case 1:
-                icon = ContextCompat.getDrawable(this, R.drawable.marker);
+                icon = ContextCompat.getDrawable(this, R.mipmap.ic_list_tab);
                 break;
             default:
                 break;
         }
         return icon;
     }
-
-
-    /**
-     * This is where we can add markers or lines, add listeners or move the camera. In this case, we
-     * just add a marker near Africa.
-     * <p/>
-     * This should only be called once and when we are sure that {@link #mMap} is not null.
-
-    private void setUpMap() {
-        mMap.addMarker(new MarkerOptions()
-                .position(new LatLng(0, 0))
-                .title("My First Marker")
-                .snippet("10/10")
-                .alpha(0.8f)
-                .draggable(true)
-                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)));
-    }*/
 }
